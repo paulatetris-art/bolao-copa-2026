@@ -1,4 +1,4 @@
-{}{
+{
   "name": "bolao-copa-2026",
   "private": true,
   "version": "1.0.0",
@@ -17,4 +17,3 @@
     "@vitejs/plugin-react": "^4.2.1"
   }
 }
-  
