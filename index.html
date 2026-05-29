@@ -121,7 +121,7 @@ const GD = {
 const MATCHES=[];let _mid=1;
 for(const[g,{t}]of Object.entries(GD))[[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]].forEach(([i,j])=>MATCHES.push({id:String(_mid++),group:g,home:t[i],away:t[j]}));
 const MBG=MATCHES.reduce((a,m)=>{(a[m.group]=a[m.group]||[]).push(m);return a;},{});
-const ALL_TEAMS=Object.values(GD).flatMap(g=>g.t);
+const ALL_TEAMS=Object.values(GD).flatMap(g=>g.t).sort((a,b)=>a.localeCompare(b,'pt'));
 const BRAZIL_MATCHES=MATCHES.filter(m=>m.home==="Brasil"||m.away==="Brasil");
 
 const SQUADS = {
@@ -726,6 +726,96 @@ function loadElencoPhotos(){
   });
 }
 
+
+function renderRulesModal(){
+  return `<div id="rules-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;overflow-y:auto;padding:20px">
+    <div style="background:#fff;border-radius:16px;max-width:480px;margin:0 auto;overflow:hidden">
+      <div style="background:#0a2e18;padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-family:'Bebas Neue',cursive;font-size:20px;color:#00d65a;letter-spacing:2px">📋 REGRAS DO BOLÃO</div>
+        <button onclick="document.getElementById('rules-modal').style.display='none'" style="background:transparent;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1">×</button>
+      </div>
+      <div style="padding:20px;font-family:'Barlow',sans-serif;font-size:13px;color:#1a2e1a;line-height:1.7">
+        <div style="font-weight:700;font-size:15px;color:#007a35;margin-bottom:10px">⚽ Sobre o Bolão</div>
+        <p>Bolão privado entre amigos para a Copa do Mundo 2026 (EUA · Canadá · México · 11 Jun – 19 Jul).</p>
+        <div style="font-weight:700;font-size:15px;color:#007a35;margin:14px 0 8px">💸 Inscrição</div>
+        <p>Valor: <strong>R$ 50,00</strong> via PIX. Apenas participantes com <strong>pagamento de R$ 50 confirmado</strong> pelo admin concorrem à premiação.</p>
+        <div style="background:#fef2f2;border:2px solid #c0392b;border-radius:10px;padding:12px;margin-top:10px;text-align:center">
+          <div style="font-weight:700;font-size:14px;color:#c0392b;margin-bottom:3px">⚠️ ATENÇÃO</div>
+          <div style="font-size:12px;color:#c0392b">Sem pagamento confirmado = fora da premiação, mesmo fazendo todos os palpites!</div>
+        </div>
+        <div style="font-weight:700;font-size:15px;color:#007a35;margin:14px 0 8px">🔮 Como fazer palpites</div>
+        <p><strong>Fase de grupos:</strong> Para cada grupo (A ao L), escolha as 2 seleções que passam de fase (+2 pts cada acerto) e preveja o placar dos 6 jogos (+5 pts placar exato, +2 pts resultado correto).</p>
+        <p style="margin-top:6px"><strong>Palpite especial:</strong> Escolha o campeão (+15 pts) e vice-campeão (+8 pts) da Copa.</p>
+        <p style="margin-top:6px"><strong>Mata-mata:</strong> Conforme as fases avançam, o admin libera os confrontos das oitavas, quartas, semifinais e final para novos palpites.</p>
+        <div style="font-weight:700;font-size:15px;color:#007a35;margin:14px 0 8px">⭐ Pontuação</div>
+        <div style="background:#f0f8f3;border-radius:8px;padding:12px">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #d0e8d0"><span>⚽ Placar exato</span><strong>+5 pts</strong></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #d0e8d0"><span>✅ Resultado correto</span><strong>+2 pts</strong></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #d0e8d0"><span>📊 Classificado correto</span><strong>+2 pts cada</strong></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #d0e8d0"><span>🏆 Campeão correto</span><strong>+15 pts</strong></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0"><span>🥈 Vice-campeão correto</span><strong>+8 pts</strong></div>
+        </div>
+        <div style="font-weight:700;font-size:15px;color:#007a35;margin:14px 0 8px">🔢 Critério de desempate</div>
+        <div style="background:#f0f8f3;border-radius:8px;padding:12px">
+          <div style="padding:3px 0">1° Mais placares exatos ⚽</div>
+          <div style="padding:3px 0">2° Mais resultados corretos ✅</div>
+          <div style="padding:3px 0">3° Mais classificados acertados 📊</div>
+          <div style="padding:3px 0">4° Acertou o campeão 🏆</div>
+        </div>
+        <div style="font-weight:700;font-size:15px;color:#007a35;margin:14px 0 8px">💰 Premiação</div>
+        <div style="background:#f0f8f3;border-radius:8px;padding:12px">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #d0e8d0"><span>🥇 1° Lugar</span><strong>60% do total</strong></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #d0e8d0"><span>🥈 2° Lugar</span><strong>30% do total</strong></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0"><span>🥉 3° Lugar</span><strong>10% do total</strong></div>
+        </div>
+        <div style="background:#fef2f2;border:1px solid #f0b0a8;border-radius:8px;padding:12px;margin-top:12px">
+          <strong style="color:#c0392b">⚠️ Importante:</strong> Apenas participantes com pagamento de R$ 50 confirmado pelo admin concorrem à premiação. Palpites sem pagamento confirmado não valem.
+        </div>
+        <div style="font-weight:700;font-size:15px;color:#007a35;margin:14px 0 8px">⏰ Prazo</div>
+        <p>Palpites da fase de grupos encerram em <strong>10/06/2026 às 23h59</strong> (horário de Brasília). Após esse prazo os palpites são bloqueados automaticamente.</p>
+      </div>
+      <div style="padding:16px 20px;border-top:1px solid #d0e8d0">
+        <button onclick="document.getElementById('rules-modal').style.display='none'" style="background:#00d65a;color:#fff;border:none;border-radius:8px;padding:12px;font-weight:700;cursor:pointer;font-size:14px;font-family:'Barlow',sans-serif;width:100%">Entendido! ✓</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTourGuide(){
+  var seen=localStorage.getItem('bolao26_tour');
+  if(seen) return '';
+  return `<div id="tour-guide" style="background:linear-gradient(135deg,#0a2e18,#1a4a28);border-radius:12px;padding:16px;margin-bottom:14px;border:2px solid #00d65a">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-family:'Bebas Neue',cursive;font-size:18px;color:#00d65a;letter-spacing:2px">🎯 COMO FAZER SEUS PALPITES</div>
+      <button onclick="localStorage.setItem('bolao26_tour','1');document.getElementById('tour-guide').style.display='none'" style="background:transparent;border:1px solid #00d65a;color:#00d65a;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:'Barlow',sans-serif">Entendi ✓</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="background:rgba(255,255,255,.08);border-radius:8px;padding:10px">
+        <div style="font-size:18px;margin-bottom:4px">1️⃣</div>
+        <div style="font-size:12px;font-weight:700;color:#ffc300;margin-bottom:4px">Palpite Especial</div>
+        <div style="font-size:11px;color:#a0d0b0;line-height:1.5">Escolha o campeão (+15 pts) e vice (+8 pts) da Copa</div>
+      </div>
+      <div style="background:rgba(255,255,255,.08);border-radius:8px;padding:10px">
+        <div style="font-size:18px;margin-bottom:4px">2️⃣</div>
+        <div style="font-size:12px;font-weight:700;color:#ffc300;margin-bottom:4px">Quem passa?</div>
+        <div style="font-size:11px;color:#a0d0b0;line-height:1.5">Em cada grupo, clique nas 2 seleções que você acha que classificam (+2 pts cada)</div>
+      </div>
+      <div style="background:rgba(255,255,255,.08);border-radius:8px;padding:10px">
+        <div style="font-size:18px;margin-bottom:4px">3️⃣</div>
+        <div style="font-size:12px;font-weight:700;color:#ffc300;margin-bottom:4px">Placares</div>
+        <div style="font-size:11px;color:#a0d0b0;line-height:1.5">Use − e + para prever o placar de cada jogo. Exato = +5 pts, resultado = +2 pts</div>
+      </div>
+      <div style="background:rgba(255,255,255,.08);border-radius:8px;padding:10px">
+        <div style="font-size:18px;margin-bottom:4px">4️⃣</div>
+        <div style="font-size:12px;font-weight:700;color:#ffc300;margin-bottom:4px">Mata-Mata</div>
+        <div style="font-size:11px;color:#a0d0b0;line-height:1.5">Após a fase de grupos, novas apostas abrem para oitavas, quartas e semis!</div>
+      </div>
+    </div>
+    <div style="background:rgba(255,195,0,.15);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:11px;color:#ffc300;text-align:center">
+      ⏰ Prazo para palpitar: <strong>10/06/2026 às 23h59</strong> — não deixe para a última hora!
+    </div>
+  </div>`;
+}
 function renderLockout(){
   var s=ST.session;
   return '<div style="background:#f0f5f1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;font-family:Barlow,sans-serif">'
@@ -753,9 +843,7 @@ function renderLogin(){
     +'<div style="font-size:11px;color:#4a8a60;letter-spacing:2px;margin-top:6px">EUA · CANADÁ · MÉXICO · 11 JUN – 19 JUL</div>'
     +'<div style="font-size:13px;color:#a0d0b0;margin-top:6px">Inscrição: R$ 50 · '+partCount+' participante'+(partCount!==1?'s':'')+'</div>'
     +'</div>'
-    // PIX box
-    +(pix&&pix.key?'<div style="max-width:420px;margin:0 auto;padding:16px 16px 0">'
-      +'<div style="background:#f0faf3;border:1px solid #a0ddb8;border-radius:12px;padding:12px 14px">'
++(false?'<div>'
       +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
       +'<span style="font-size:18px">&#128184;</span>'
       +'<div><div style="font-weight:700;font-size:14px;color:#007a35">Pague via PIX</div>'
@@ -799,9 +887,10 @@ function renderLogin(){
     // Toggle
     +'<button id="l-toggle" style="background:transparent;color:#5a8a6a;border:1px solid #d0e8d0;border-radius:8px;padding:10px;font-weight:700;cursor:pointer;font-size:12px;font-family:Barlow,sans-serif;width:100%;margin-top:8px">'+(ST.lCreating?'&#8592; Já tenho conta':'&#43; Criar nova conta')+'</button>'
     +'</div>'
-    +'<p style="font-size:11px;color:#9aaa9a;text-align:center;margin-top:12px">Admin: nome "Admin", PIN 2026</p>'
+    +''
     +'</div>'
-    +'</div>';
+    +'</div>'
+    +renderRulesModal();
 }
 
 
@@ -1064,7 +1153,11 @@ function renderRanking(){
   html+=`<div class="card" style="margin-top:12px">
     <div class="bb" style="font-size:15px;color:#ffc300;letter-spacing:2px;margin-bottom:10px">PONTUAÇÃO</div>
     ${[['⚽ Placar exato (qualquer jogo)','5 pts'],['✅ Resultado correto','2 pts'],['📊 Classificado correto','2 pts cada'],['🏆 Campeão correto','15 pts'],['🥈 Vice-campeão correto','8 pts']].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #d0e8d0;font-size:13px"><span style="color:#5a7a6a">${l}</span><span style="color:#00d65a;font-weight:700">${v}</span></div>`).join('')}
-    <p style="font-size:11px;color:#5a8a6a;margin-top:8px">Apenas participantes com pagamento confirmado concorrem à premiação.</p>
+    <p style="font-size:11px;color:#5a8a6a;margin-top:8px">Apenas participantes com <strong>pagamento de R$ 50 confirmado</strong> concorrem à premiação.</p>
+    <div style="background:#fef2f2;border:2px solid #c0392b;border-radius:10px;padding:12px;margin-top:10px;text-align:center">
+      <div style="font-weight:700;font-size:14px;color:#c0392b;margin-bottom:3px">⚠️ ATENÇÃO</div>
+      <div style="font-size:12px;color:#c0392b">Sem pagamento confirmado = fora da premiação!</div>
+    </div>
     <div style="background:#e8f8ee;border-radius:8px;padding:10px;margin-top:8px;border:1px solid #a0ddb8">
       <div style="font-weight:700;font-size:12px;color:#007a35;margin-bottom:6px">🔢 CRITÉRIO DE DESEMPATE</div>
       <div style="font-size:11px;color:#2a6a3a;line-height:1.8">Em caso de empate de pontos:<br>
@@ -1253,7 +1346,10 @@ function renderPremio(){
       </div>
     </div>`;
   });
-  html+=`<p style="font-size:11px;color:#9aaa9a;text-align:center;margin-top:10px">Apenas participantes com pagamento confirmado pelo admin concorrem.</p>`;
+  html+=`<p style="font-size:11px;color:#9aaa9a;text-align:center;margin-top:10px">Apenas participantes com <strong>pagamento de R$ 50 confirmado</strong> pelo admin concorrem.</p>
+    <div style="background:#fef2f2;border:2px solid #c0392b;border-radius:10px;padding:12px;margin-top:10px;text-align:center">
+      <strong style="color:#c0392b">⚠️ Sem pagamento confirmado = fora da premiação!</strong>
+    </div>`;
   return html;
 }
 
