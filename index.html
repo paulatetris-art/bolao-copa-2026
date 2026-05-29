@@ -727,12 +727,14 @@ function loadElencoPhotos(){
 }
 
 
+function openRules(){var m=document.getElementById("rules-modal");if(m)m.style.display="flex";}
+function closeRules(){var m=document.getElementById("rules-modal");if(m)m.style.display="none";}
 function renderRulesModal(){
   return `<div id="rules-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;overflow-y:auto;padding:20px">
     <div style="background:#fff;border-radius:16px;max-width:480px;margin:0 auto;overflow:hidden">
       <div style="background:#0a2e18;padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
         <div style="font-family:'Bebas Neue',cursive;font-size:20px;color:#00d65a;letter-spacing:2px">📋 REGRAS DO BOLÃO</div>
-        <button onclick="document.getElementById('rules-modal').style.display='none'" style="background:transparent;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1">×</button>
+        <button onclick="closeRules()" style="background:transparent;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1">×</button>
       </div>
       <div style="padding:20px;font-family:'Barlow',sans-serif;font-size:13px;color:#1a2e1a;line-height:1.7">
         <div style="font-weight:700;font-size:15px;color:#007a35;margin-bottom:10px">⚽ Sobre o Bolão</div>
@@ -775,19 +777,19 @@ function renderRulesModal(){
         <p>Palpites da fase de grupos encerram em <strong>10/06/2026 às 23h59</strong> (horário de Brasília). Após esse prazo os palpites são bloqueados automaticamente.</p>
       </div>
       <div style="padding:16px 20px;border-top:1px solid #d0e8d0">
-        <button onclick="document.getElementById('rules-modal').style.display='none'" style="background:#00d65a;color:#fff;border:none;border-radius:8px;padding:12px;font-weight:700;cursor:pointer;font-size:14px;font-family:'Barlow',sans-serif;width:100%">Entendido! ✓</button>
+        <button onclick="closeRules()" style="background:#00d65a;color:#fff;border:none;border-radius:8px;padding:12px;font-weight:700;cursor:pointer;font-size:14px;font-family:'Barlow',sans-serif;width:100%">Entendido! ✓</button>
       </div>
     </div>
   </div>`;
 }
 
 function renderTourGuide(){
-  var seen=localStorage.getItem('bolao26_tour');
-  if(seen) return '';
+  // Tour shows every session until dismissed
+  if(typeof window!=='undefined'&&window._tourDismissed) return '';
   return `<div id="tour-guide" style="background:linear-gradient(135deg,#0a2e18,#1a4a28);border-radius:12px;padding:16px;margin-bottom:14px;border:2px solid #00d65a">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div style="font-family:'Bebas Neue',cursive;font-size:18px;color:#00d65a;letter-spacing:2px">🎯 COMO FAZER SEUS PALPITES</div>
-      <button onclick="localStorage.setItem('bolao26_tour','1');document.getElementById('tour-guide').style.display='none'" style="background:transparent;border:1px solid #00d65a;color:#00d65a;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:'Barlow',sans-serif">Entendi ✓</button>
+      <button onclick="window._tourDismissed=true;document.getElementById('tour-guide').style.display='none'" style="background:transparent;border:1px solid #00d65a;color:#00d65a;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:'Barlow',sans-serif">Entendi ✓</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <div style="background:rgba(255,255,255,.08);border-radius:8px;padding:10px">
