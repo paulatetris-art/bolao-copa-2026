@@ -1122,7 +1122,7 @@ function renderRanking(){
     const mc=['#ffc300','#b0b8cc','#cd7f50'][paidIdx>=0?paidIdx:99]||null;
     const isMe=s&&p.id===s.id;
     const prize=p.paid&&paidIdx>=0&&paidIdx<3&&pool>0?pool*PRIZE[paidIdx]:null;
-    html+=`<div class="card" style="border-left:4px solid ${isMe?'#00d65a':mc||'#d0e8d0'};background:${isMe?'#0a1f12':paidIdx===0&&p.paid?'#1a1200':'#ffffff'}">
+    html+=`<div class="card" style="border-left:4px solid ${isMe?'#00d65a':mc||'#d0e8d0'};background:${isMe?'linear-gradient(90deg,#0a2e18,#1a4a28)':paidIdx===0&&p.paid?'#1a1200':'#ffffff'}">
       <div class="lb-row">
         <div class="bb" style="font-size:22px;width:28px;text-align:center;color:${mc||(p.paid?'#5a8a6a':'#1e2035')}">${p.paid&&paidIdx>=0&&paidIdx<3?['🥇','🥈','🥉'][paidIdx]:'#'+(i+1)}</div>
         ${avatarEl(p.name,32)}
