@@ -194,7 +194,7 @@ function getSch(h,a){return SCHEDULE[h+' x '+a]||SCHEDULE[a+' x '+h]||null;}
 // ═══════════════════════════════════════════════
 // SCORING
 // ═══════════════════════════════════════════════
-function calcBreakdown(pred,mr,fr,gr){
+function calcBreakdown(pred,mr,fr,gr,el){
   var exact=0,correct=0,classified=0;
   MATCHES.forEach(function(m){
     var p=pred&&pred.matches&&pred.matches[m.id];
@@ -212,10 +212,24 @@ function calcBreakdown(pred,mr,fr,gr){
   });
   var champ=(pred&&pred.champion&&fr&&fr.champion&&pred.champion===fr.champion)?1:0;
   var vice=(pred&&pred.viceChampion&&fr&&fr.viceChampion&&pred.viceChampion===fr.viceChampion)?1:0;
+  // Mata-mata picks
+  var mmTotal=0;
+  var mmPts={r32:5,r16:8,r8:10,r4t:5,r4:15};
+  var rounds2=['r32','r16','r8','r4t','r4'];
+  rounds2.forEach(function(rid){
+    var games=(el&&el[rid])||[];
+    var myPicks=(pred&&pred.mmPicks&&pred.mmPicks[rid])||{};
+    games.forEach(function(game,i){
+      if(!game||!game.played)return;
+      var hs=parseInt(game.homeScore),as=parseInt(game.awayScore);
+      var winner=hs>as||(hs===as&&game.penHome>game.penAway)?game.home:game.away;
+      if(myPicks[i]&&myPicks[i]===winner)mmTotal+=mmPts[rid];
+    });
+  });
   return{exact:exact,correct:correct,classified:classified,champion:champ,vice:vice,
-    pts:exact*5+correct*2+classified*2+champ*15+vice*8};
+    pts:exact*5+correct*2+classified*2+champ*15+vice*8+mmTotal};
 }
-function calcPts(pred,mr,fr,gr){return calcBreakdown(pred,mr,fr,gr).pts;}
+function calcPts(pred,mr,fr,gr){return calcBreakdown(pred,mr,fr,gr,ST.el).pts;}
 
 // ═══════════════════════════════════════════════
 // STATE
@@ -227,7 +241,9 @@ var ST={
   elencoGroup:'C',elencoTeam:'Brasil',
   lName:'',lPin:'',lErr:'',lCreating:false,
   showAllRanking:false,rankSearch:'',
-  tourSeen:false
+  tourSeen:false,
+  mmPicks:{},
+  storySlide:0
 };
 
 // ═══════════════════════════════════════════════
@@ -272,7 +288,7 @@ function toast(msg){
 // ═══════════════════════════════════════════════
 function getLb(){
   return Object.values(ST.parts).map(function(p){
-    var bd=calcBreakdown(ST.preds[p.id],ST.mr,ST.fr,ST.gr);
+    var bd=calcBreakdown(ST.preds[p.id],ST.mr,ST.fr,ST.gr,ST.el);
     return Object.assign({},p,bd);
   }).sort(function(a,b){
     if(b.pts!==a.pts)return b.pts-a.pts;
@@ -332,7 +348,81 @@ function rulesHTML(){
 // ═══════════════════════════════════════════════
 // TOUR GUIDE
 // ═══════════════════════════════════════════════
+
+function renderStories(){
+  if(ST.tourSeen)return'';
+  var slide=ST.storySlide||0;
+  var slides=[
+    {
+      icon:'🎯',
+      title:'Bem-vindo ao Bolão Copa 2026!',
+      text:'Você vai palpitar nos jogos e torcer para acumular o máximo de pontos. Os 3 primeiros colocados ganham premiação!',
+      color:'#0a2e18',
+      accent:'#00d65a'
+    },
+    {
+      icon:'🏆',
+      title:'Palpite Especial',
+      text:'Antes de tudo, escolha o <b>Campeão</b> (+15 pts) e o <b>Vice-campeão</b> (+8 pts) da Copa. Esses palpites valem muito!',
+      color:'#1a1a00',
+      accent:'#ffc300'
+    },
+    {
+      icon:'📊',
+      title:'Quem passa de fase?',
+      text:'Em cada grupo (A ao L), escolha as <b>2 seleções</b> que você acha que avançam. Cada acerto vale <b>+2 pts</b>.',
+      color:'#001a2e',
+      accent:'#3a9abf'
+    },
+    {
+      icon:'⚽',
+      title:'Placares dos jogos',
+      text:'Use os botões <b>−</b> e <b>+</b> para prever o placar de cada jogo.<br>Placar exato = <b>+5 pts</b> · Resultado correto = <b>+2 pts</b>',
+      color:'#0a2e18',
+      accent:'#00d65a'
+    },
+    {
+      icon:'⚔️',
+      title:'Fase Eliminatória',
+      text:'Após a fase de grupos, o admin libera o mata-mata. Escolha <b>quem vence</b> cada jogo. Pontos aumentam a cada fase!<br>Oitavas +5 · Quartas +8 · Semi +10 · Final +15',
+      color:'#1a0a2e',
+      accent:'#9a6abf'
+    },
+    {
+      icon:'⏰',
+      title:'Não perca o prazo!',
+      text:'Os palpites da fase de grupos encerram em <b style="color:#ffc300">10/06/2026 às 23h59</b>. Após isso são bloqueados automaticamente. Faça logo os seus!',
+      color:'#2e0a0a',
+      accent:'#ff6b6b'
+    }
+  ];
+
+  var s=slides[slide];
+  return '<div style="background:'+s.color+';border-radius:14px;padding:20px;margin-bottom:14px;border:2px solid '+s.accent+';position:relative">'
+    // Progress dots
+    +'<div style="display:flex;gap:4px;margin-bottom:14px">'
+    +slides.map(function(_,i){return'<div style="flex:1;height:3px;border-radius:2px;background:'+(i<=slide?s.accent:'rgba(255,255,255,.2)')+'"></div>';}).join('')
+    +'</div>'
+    // Content
+    +'<div style="text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:48px;margin-bottom:8px">'+s.icon+'</div>'
+    +'<div class="bb" style="font-size:20px;color:'+s.accent+';letter-spacing:2px;margin-bottom:8px">'+s.title+'</div>'
+    +'<div style="font-size:13px;color:#c0d0c0;line-height:1.7">'+s.text+'</div>'
+    +'</div>'
+    // Navigation
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">'
+    +(slide>0?'<button data-story="prev" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:8px 16px;cursor:pointer;font-family:Barlow,sans-serif;font-weight:700;font-size:12px">← Anterior</button>':'<div></div>')
+    +'<span style="font-size:11px;color:rgba(255,255,255,.5)">'+(slide+1)+'/'+slides.length+'</span>'
+    +(slide<slides.length-1
+      ?'<button data-story="next" style="background:'+s.accent+';border:none;color:#000;border-radius:8px;padding:8px 16px;cursor:pointer;font-family:Barlow,sans-serif;font-weight:700;font-size:12px">Próximo →</button>'
+      :'<button data-story="done" style="background:'+s.accent+';border:none;color:#000;border-radius:8px;padding:8px 16px;cursor:pointer;font-family:Barlow,sans-serif;font-weight:700;font-size:12px">Entendi! ✓</button>'
+    )
+    +'</div>'
+    +'</div>';
+}
+
 function tourHTML(){
+  return renderStories();
   if(ST.tourSeen)return '';
   return '<div class="tour-card" id="tour-card">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
@@ -815,45 +905,85 @@ function renderPremio(){
 // MATA-MATA (simplified)
 // ═══════════════════════════════════════════════
 function renderChaveamento(){
+  var s=ST.session;
   var el=ST.el||{};
   var unlocked=el.unlocked||{};
+  var mmPts={r32:5,r16:8,r8:10,r4t:5,r4:15};
   var html='<div class="bb" style="font-size:22px;letter-spacing:3px;color:#d4a000;margin-bottom:6px">🏅 FASE ELIMINATÓRIA</div>'
-    +'<div style="font-size:12px;color:#5a8a6a;margin-bottom:14px">Admin libera cada fase conforme a Copa avança</div>';
+    +'<div style="font-size:12px;color:#5a8a6a;margin-bottom:14px">Escolha o vencedor de cada jogo · Admin libera cada fase</div>';
+
   var rounds=[
-    {id:'r32',label:'Oitavas de Final',emoji:'⚔️',color:'#3a7abf',n:16},
-    {id:'r16',label:'Quartas de Final',emoji:'🔥',color:'#007a35',n:8},
-    {id:'r8',label:'Semifinais',emoji:'⭐',color:'#d4a000',n:4},
-    {id:'r4t',label:'Disputa 3° Lugar',emoji:'🥉',color:'#c07030',n:1},
-    {id:'r4',label:'Final',emoji:'🏆',color:'#c0392b',n:1}
+    {id:'r32',label:'Oitavas de Final',emoji:'⚔️',color:'#3a7abf',pts:5},
+    {id:'r16',label:'Quartas de Final',emoji:'🔥',color:'#007a35',pts:8},
+    {id:'r8',label:'Semifinais',emoji:'⭐',color:'#d4a000',pts:10},
+    {id:'r4t',label:'Disputa 3° Lugar',emoji:'🥉',color:'#c07030',pts:5},
+    {id:'r4',label:'Final',emoji:'🏆',color:'#c0392b',pts:15}
   ];
+
   rounds.forEach(function(rd){
     var isOpen=!!unlocked[rd.id];
     var games=(el[rd.id])||[];
     var hasGames=games.some(function(g){return g&&(g.home||g.away);});
-    html+='<div class="card" style="border-left:4px solid '+(isOpen?rd.color:'#d0e8d0')+';opacity:'+(isOpen?1:.65)+';margin-bottom:8px">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:'+(isOpen&&hasGames?'10px':'4px')+'">'
-      +'<div class="bb" style="font-size:15px;color:'+(isOpen?rd.color:'#7a9a8a')+'">'+rd.emoji+' '+rd.label+'</div>'
-      +'<span style="font-size:10px;padding:2px 8px;border-radius:100px;background:'+(isOpen?'#e8f8ee':'#f0f0f0')+';color:'+(isOpen?'#007a35':'#9aaa9a')+'">'+(isOpen?'🔓 Liberada':'🔒 Aguardando')+'</span>'
-      +'</div>';
-    if(!isOpen){html+='<div style="font-size:12px;color:#9aaa9a">Esta fase será liberada pelo admin após os jogos anteriores.</div>';}
-    else if(!hasGames){html+='<div style="text-align:center;padding:16px;color:#7a9a8a;font-size:12px">Confrontos ainda não definidos.</div>';}
-    else{
-      games.forEach(function(game){
+    var myPicks=(ST.mmPicks&&ST.mmPicks[s.id]&&ST.mmPicks[s.id][rd.id])||{};
+
+    html+='<div class="card" style="border-left:4px solid '+(isOpen?rd.color:'#d0e8d0')+';opacity:'+(isOpen?1:.65)+';margin-bottom:8px">';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:'+(isOpen&&hasGames?'10px':'4px')+'">';
+    html+='<div class="bb" style="font-size:15px;color:'+(isOpen?rd.color:'#7a9a8a')+'">'+rd.emoji+' '+rd.label+'</div>';
+    html+='<span style="font-size:10px;padding:2px 8px;border-radius:100px;background:'+(isOpen?'#e8f8ee':'#f0f0f0')+';color:'+(isOpen?'#007a35':'#9aaa9a')+'">'+(isOpen?'🔓 +'+rd.pts+' pts por acerto':'🔒 Aguardando')+'</span>';
+    html+='</div>';
+
+    if(!isOpen){
+      html+='<div style="font-size:12px;color:#9aaa9a">Liberada pelo admin após os jogos anteriores.</div>';
+    } else if(!hasGames){
+      html+='<div style="text-align:center;padding:16px;color:#7a9a8a;font-size:12px">⏳ Confrontos ainda não definidos.</div>';
+    } else {
+      games.forEach(function(game,i){
         if(!game||(!game.home&&!game.away))return;
+        var myPick=myPicks[i]||'';
+        var hasScore=game.played&&game.homeScore!=null&&game.awayScore!=null&&game.homeScore!==''&&game.awayScore!=='';
         var hs=parseInt(game.homeScore),as=parseInt(game.awayScore);
-        var hasScore=game.homeScore!=null&&game.homeScore!==''&&game.awayScore!=null&&game.awayScore!=='';
-        html+='<div style="background:#f5faf6;border:1px solid #d0e8d0;border-radius:8px;padding:10px;margin-bottom:6px">';
+        var winner=hasScore?(hs>as||(hs===as&&game.penHome>game.penAway)?game.home:game.away):'';
+        var correct=winner&&myPick&&myPick===winner;
+        var wrong=winner&&myPick&&myPick!==winner;
+
+        html+='<div style="background:'+(hasScore?'#e8f8ee':'#f8fafb')+';border:1px solid '+(hasScore?'#a0ddb8':'#d0e8d0')+';border-radius:8px;padding:10px;margin-bottom:8px">';
         if(game.date||game.city)html+='<div style="font-size:10px;color:#7a9a8a;text-align:center;margin-bottom:6px">'+(game.date?'📅 '+game.date:'')+(game.city?' · 📍 '+game.city:'')+'</div>';
-        html+='<div style="display:flex;align-items:center;gap:8px">'
-          +'<div style="flex:1;text-align:right;font-size:13px;font-weight:700;color:'+(hasScore&&hs>as?'#007a35':'#1a2e1a')+'">'+getFlag(game.home||'')+' '+(game.home||'A definir')+'</div>'
-          +'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
-          +'<div class="bb" style="font-size:24px;color:#1a6a35;min-width:22px;text-align:center">'+(hasScore?game.homeScore:'-')+'</div>'
-          +'<div style="color:#7a9a8a;font-size:12px">×</div>'
-          +'<div class="bb" style="font-size:24px;color:#1a6a35;min-width:22px;text-align:center">'+(hasScore?game.awayScore:'-')+'</div>'
-          +'</div>'
-          +'<div style="flex:1;text-align:left;font-size:13px;font-weight:700;color:'+(hasScore&&as>hs?'#007a35':'#1a2e1a')+'">'+getFlag(game.away||'')+' '+(game.away||'A definir')+'</div>'
-          +'</div>';
-        if(game.played){if(game.penHome||game.penAway)html+='<div style="text-align:center;font-size:11px;color:#5a8a6a;margin-top:3px">Pênaltis: '+game.penHome+'×'+game.penAway+'</div>';}
+
+        // Score display
+        html+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">';
+        html+='<div style="flex:1;text-align:right;font-size:13px;font-weight:700;color:'+(hasScore&&hs>as?'#007a35':'#1a2e1a')+'">'+getFlag(game.home)+' '+(game.home||'A definir')+'</div>';
+        html+='<div style="display:flex;align-items:center;gap:4px;flex-shrink:0">';
+        html+='<div class="bb" style="font-size:22px;color:#1a6a35;min-width:22px;text-align:center">'+(hasScore?game.homeScore:'-')+'</div>';
+        html+='<div style="color:#7a9a8a;font-size:12px">×</div>';
+        html+='<div class="bb" style="font-size:22px;color:#1a6a35;min-width:22px;text-align:center">'+(hasScore?game.awayScore:'-')+'</div>';
+        html+='</div>';
+        html+='<div style="flex:1;text-align:left;font-size:13px;font-weight:700;color:'+(hasScore&&as>hs?'#007a35':'#1a2e1a')+'">'+getFlag(game.away)+' '+(game.away||'A definir')+'</div>';
+        html+='</div>';
+
+        if(game.penHome||game.penAway)html+='<div style="text-align:center;font-size:11px;color:#5a8a6a;margin-bottom:6px">Pênaltis: '+game.penHome+' × '+game.penAway+'</div>';
+
+        // Pick buttons (only if not played and not admin)
+        if(!s.isAdmin){
+          if(!hasScore){
+            html+='<div style="font-size:11px;color:#5a8a6a;text-align:center;margin-bottom:6px">Escolha o vencedor (+'+rd.pts+' pts)</div>';
+            html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+            [game.home,game.away].forEach(function(team){
+              var sel=myPick===team;
+              html+='<button data-mmpick="'+rd.id+','+i+','+team+'" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:8px;cursor:pointer;font-weight:'+(sel?700:400)+';font-size:12px;font-family:Barlow,sans-serif;background:'+(sel?'#e8f8ee':'#f5faf6')+';border:2px solid '+(sel?'#00a848':'#d0e8d0')+';color:'+(sel?'#007a35':'#5a8a6a')+'">'
+                +getFlag(team)+'<span>'+team+'</span>'+(sel?'<span style="color:#007a35">✓</span>':'')+'</button>';
+            });
+            html+='</div>';
+          } else {
+            // Show result
+            html+='<div style="text-align:center;font-size:12px;padding:6px;border-radius:6px;background:'+(correct?'#e8f8ee':wrong?'#fef2f2':'#f5f5f5')+';color:'+(correct?'#007a35':wrong?'#c0392b':'#5a8a6a')+'">';
+            if(myPick)html+='Seu palpite: '+getFlag(myPick)+' <b>'+myPick+'</b> '+(correct?'✓ +'+rd.pts+' pts':wrong?'✗ 0 pts':'');
+            else html+='Sem palpite neste jogo';
+            html+='</div>';
+          }
+        } else {
+          // Admin view - show winner
+          if(hasScore)html+='<div style="text-align:center;font-size:12px;color:#007a35;font-weight:700">✓ '+winner+' avança</div>';
+        }
         html+='</div>';
       });
     }
@@ -861,6 +991,7 @@ function renderChaveamento(){
   });
   return html;
 }
+
 
 // ═══════════════════════════════════════════════
 // REGRAS TAB
