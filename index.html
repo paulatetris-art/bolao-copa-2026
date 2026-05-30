@@ -1165,6 +1165,27 @@ function bindMain(){
   document.querySelectorAll('[data-elgrp]').forEach(function(b){b.addEventListener('click',function(){ST.elencoGroup=this.dataset.elgrp;ST.elencoTeam=GD[ST.elencoGroup].t[0];render();setTimeout(loadElencoPhotos,100);});});
   document.querySelectorAll('[data-elteam]').forEach(function(b){b.addEventListener('click',function(){ST.elencoTeam=this.dataset.elteam;render();setTimeout(loadElencoPhotos,100);});});
   if(ST.tab==='elencos')setTimeout(loadElencoPhotos,100);
+  // story navigation
+  document.querySelectorAll('[data-story]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var action=this.dataset.story;
+      if(action==='next'){ST.storySlide=(ST.storySlide||0)+1;render();}
+      else if(action==='prev'){ST.storySlide=Math.max(0,(ST.storySlide||0)-1);render();}
+      else if(action==='done'){ST.tourSeen=true;ST.storySlide=0;render();}
+    });
+  });
+  // mata-mata picks
+  document.querySelectorAll('[data-mmpick]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var s=ST.session;if(!s||s.isAdmin)return;
+      var parts=this.dataset.mmpick.split(',');
+      var rid=parts[0],i2=parseInt(parts[1]),team=parts[2];
+      var path='preds/'+s.id+'/mmPicks/'+rid+'/'+i2;
+      var cur=((ST.preds[s.id]&&ST.preds[s.id].mmPicks&&ST.preds[s.id].mmPicks[rid])||{})[i2];
+      if(cur===team)dbSet(path,null);
+      else dbSet(path,team);
+    });
+  });
 }
 
 window.addEventListener('load',function(){
